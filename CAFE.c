@@ -88,7 +88,8 @@ void printReceipt() {
     printf("\n==============================\n");
     printf("           Receipt\n");
     printf("==============================\n");
-    for (int i = 0; i < orderCount; i++) {
+    int i;
+    for (i = 0; i < orderCount; i++) {
         printf("%d. %s - %d x %.2f PHP (Sugar: %s, Espresso Shot: %s)\n", i + 1, orders[i].itemName, orders[i].quantity, orders[i].price, orders[i].sugarLevel, orders[i].espressoShot ? "Yes" : "No");
         total += orders[i].price;
     }
