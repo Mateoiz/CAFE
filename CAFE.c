@@ -98,6 +98,7 @@ void printReceipt() {
     if (account.points > 1) {
         char usePoints;
         printf("You have %.2f points. Would you like to use them to get a discount? (y/n): ", account.points);
+        fflush(stdin);
         scanf(" %c", &usePoints);
         if (usePoints == 'y' || usePoints == 'Y') {
             float discount = account.points / POINTS_CONVERSION_RATE;
@@ -131,8 +132,10 @@ void createAccount(char *username) {
     printf("     Create an Account\n");
     printf("==============================\n");
     printf("Enter username: ");
+    fflush(stdin);
     scanf("%s", username);
     printf("Enter password: ");
+    fflush(stdin);
     scanf("%s", password);
     strcpy(account.username, username);
     account.points = 0.0;
@@ -149,6 +152,7 @@ int login(char *username, int *accountCreated) {
     printf("2. Continue as Guest\n");
     printf("3. Exit\n");
     printf("Enter your choice: ");
+    fflush(stdin);
     scanf("%d", &choice);
 
     if (choice == 1) {
@@ -193,19 +197,24 @@ int main() {
         }
         printf("6. Logout\n");
         printf("Enter your choice: ");
+        fflush(stdin);
         scanf("%d", &choice);
 
         switch (choice) {
             case 1:
                 displayCoffeeMenu();
                 printf("Please select an item by entering the corresponding number: ");
+                fflush(stdin);
                 scanf("%d", &itemChoice);
                 if (itemChoice == 10) break;
                 printf("Enter quantity: ");
+                fflush(stdin);
                 scanf("%d", &quantity);
                 printf("Enter sugar level (None, Low, Medium, High): ");
+                fflush(stdin);
                 scanf("%s", sugarLevel);
                 printf("Add an espresso shot? (1 for Yes, 0 for No): ");
+                fflush(stdin);
                 scanf("%d", &espressoShot);
                 switch (itemChoice) {
                     case 1:
@@ -261,6 +270,7 @@ int main() {
             case 2:
                 displayTeaMenu();
                 printf("Please select an item by entering the corresponding number: ");
+                fflush(stdin);
                 scanf("%d", &itemChoice);
                 if (itemChoice == 9) break;
                 switch (itemChoice) {
@@ -312,6 +322,7 @@ int main() {
             case 3:
                 displayBakeryMenu();
                 printf("Please select an item by entering the corresponding number: ");
+                fflush(stdin);
                 scanf("%d", &itemChoice);
                 if (itemChoice == 6) break;
                 switch (itemChoice) {
