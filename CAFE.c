@@ -60,13 +60,74 @@ void displayBakeryMenu() {
     printf("\n==============================\n");
     printf("  Bakery & Pastries Menu\n");
     printf("==============================\n");
-    printf("1. Croissant (Plain, Almond, Chocolate) - 168.00 PHP\n");
-    printf("2. Muffins (Blueberry, Banana Nut, Chocolate Chip) - 154.00 PHP\n");
-    printf("3. Scones (Raisin, Cranberry) - 140.00 PHP\n");
+    printf("1. Croissant (Plain, Almond, Chocolate) - 168.00 PHP (Plain), 182.00 PHP (Almond), 196.00 PHP (Chocolate)\n");
+    printf("2. Muffins (Blueberry, Banana Nut, Chocolate Chip) - 154.00 PHP (Blueberry), 168.00 PHP (Banana Nut), 182.00 PHP (Chocolate Chip)\n");
+    printf("3. Scones (Raisin, Cranberry) - 140.00 PHP (Raisin), 154.00 PHP (Cranberry)\n");
     printf("4. Cinnamon Rolls - 182.00 PHP\n");
     printf("5. Danish Pastries - 196.00 PHP\n");
     printf("6. Back to Main Menu\n");
     printf("==============================\n");
+}
+
+void addBakeryOrder(int itemChoice, int subChoice, int quantity) {
+    switch (itemChoice) {
+        case 1:
+            switch (subChoice) {
+                case 1:
+                    addOrder("Plain Croissant", 168.00, quantity, "None", 0);
+                    addPoints(168.00 * quantity);
+                    break;
+                case 2:
+                    addOrder("Almond Croissant", 182.00, quantity, "None", 0);
+                    addPoints(182.00 * quantity);
+                    break;
+                case 3:
+                    addOrder("Chocolate Croissant", 196.00, quantity, "None", 0);
+                    addPoints(196.00 * quantity);
+                    break;
+                default:
+                    printf("Invalid selection. Please try again.\n");
+                    break;
+            }
+            break;
+        case 2:
+            switch (subChoice) {
+                case 1:
+                    addOrder("Blueberry Muffin", 154.00, quantity, "None", 0);
+                    addPoints(154.00 * quantity);
+                    break;
+                case 2:
+                    addOrder("Banana Nut Muffin", 168.00, quantity, "None", 0);
+                    addPoints(168.00 * quantity);
+                    break;
+                case 3:
+                    addOrder("Chocolate Chip Muffin", 182.00, quantity, "None", 0);
+                    addPoints(182.00 * quantity);
+                    break;
+                default:
+                    printf("Invalid selection. Please try again.\n");
+                    break;
+            }
+            break;
+        case 3:
+            switch (subChoice) {
+                case 1:
+                    addOrder("Raisin Scone", 140.00, quantity, "None", 0);
+                    addPoints(140.00 * quantity);
+                    break;
+                case 2:
+                    addOrder("Cranberry Scone", 154.00, quantity, "None", 0);
+                    addPoints(154.00 * quantity);
+                    break;
+                default:
+                    printf("Invalid selection. Please try again.\n");
+                    break;
+            }
+            break;
+        default:
+            printf("Invalid selection. Please try again.\n");
+            break;
+    }
 }
 
 void addOrder(const char *itemName, float price, int quantity, const char *sugarLevel, int espressoShot) {
