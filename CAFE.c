@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define MAX_ORDERS 100
 #define ESPRESSO_SHOT_PRICE 28.0
-#define POINTS_CONVERSION_RATE 0.5
 
-typedef struct {
+typedef struct Order {
     char itemName[50];
     float price;
     int quantity;
@@ -13,15 +14,21 @@ typedef struct {
     int espressoShot;
 } Order;
 
-typedef struct {
+typedef struct Account {
     char username[50];
     float points;
+    struct tm creationDate;
 } Account;
 
 Order orders[MAX_ORDERS];
 int orderCount = 0;
 int itemAdded = 0;
-Account account;
+struct Account account;
+
+void clearInputBuffer() {
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
 
 void displayCoffeeMenu() {
     printf("\n==============================\n");
@@ -60,13 +67,77 @@ void displayBakeryMenu() {
     printf("\n==============================\n");
     printf("  Bakery & Pastries Menu\n");
     printf("==============================\n");
-    printf("1. Croissant (Plain, Almond, Chocolate) - 168.00 PHP\n");
-    printf("2. Muffins (Blueberry, Banana Nut, Chocolate Chip) - 154.00 PHP\n");
-    printf("3. Scones (Raisin, Cranberry) - 140.00 PHP\n");
+    printf("1. Croissant (Plain, Almond, Chocolate) - 168.00 PHP (Plain), 182.00 PHP (Almond), 196.00 PHP (Chocolate)\n");
+    printf("2. Muffins (Blueberry, Banana Nut, Chocolate Chip) - 154.00 PHP (Blueberry), 168.00 PHP (Banana Nut), 182.00 PHP (Chocolate Chip)\n");
+    printf("3. Scones (Raisin, Cranberry) - 140.00 PHP (Raisin), 154.00 PHP (Cranberry)\n");
     printf("4. Cinnamon Rolls - 182.00 PHP\n");
     printf("5. Danish Pastries - 196.00 PHP\n");
     printf("6. Back to Main Menu\n");
     printf("==============================\n");
+}
+
+void addPoints(float amount);
+void addOrder(const char *itemName, float price, int quantity, const char *sugarLevel, int espressoShot);
+
+void addBakeryOrder(int itemChoice, int subChoice, int quantity) {
+    switch (itemChoice) {
+        case 1:
+            switch (subChoice) {
+                case 1:
+                    addOrder("Plain Croissant", 168.00, quantity, "None", 0);
+                    addPoints(3.2 * quantity);
+                    break;
+                case 2:
+                    addOrder("Almond Croissant", 182.00, quantity, "None", 0);
+                    addPoints(1 * quantity);
+                    break;
+                case 3:
+                    addOrder("Chocolate Croissant", 196.00, quantity, "None", 0);
+                    addPoints(1 * quantity);
+                    break;
+                default:
+                    printf("Invalid selection. Please try again.\n");
+                    break;
+            }
+            break;
+        case 2:
+            switch (subChoice) {
+                case 1:
+                    addOrder("Blueberry Muffin", 154.00, quantity, "None", 0);
+                    addPoints(1 * quantity);
+                    break;
+                case 2:
+                    addOrder("Banana Nut Muffin", 168.00, quantity, "None", 0);
+                    addPoints(1 * quantity);
+                    break;
+                case 3:
+                    addOrder("Chocolate Chip Muffin", 182.00, quantity, "None", 0);
+                    addPoints(1 * quantity);
+                    break;
+                default:
+                    printf("Invalid selection. Please try again.\n");
+                    break;
+            }
+            break;
+        case 3:
+            switch (subChoice) {
+                case 1:
+                    addOrder("Raisin Scone", 140.00, quantity, "None", 0);
+                    addPoints(1 * quantity);
+                    break;
+                case 2:
+                    addOrder("Cranberry Scone", 154.00, quantity, "None", 0);
+                    addPoints(1 * quantity);
+                    break;
+                default:
+                    printf("Invalid selection. Please try again.\n");
+                    break;
+            }
+            break;
+        default:
+            printf("Invalid selection. Please try again.\n");
+            break;
+    }
 }
 
 void addOrder(const char *itemName, float price, int quantity, const char *sugarLevel, int espressoShot) {
@@ -83,38 +154,58 @@ void addOrder(const char *itemName, float price, int quantity, const char *sugar
     }
 }
 
+int isAccountValid(struct tm creationDate) {
+    time_t now = time(NULL);
+    struct tm *currentDate = localtime(&now);
+
+    double seconds = difftime(mktime(currentDate), mktime(&creationDate));
+    double days = seconds / (60 * 60 * 24);
+
+    if (days > 365) {
+        return 0;
+    } else if (days > 335) { // 365 - 30 = 335
+        printf("Warning: Your account is about to expire in less than a month.\n");
+    }
+    return 1;
+}
+
 void printReceipt() {
     float total = 0.0;
     printf("\n==============================\n");
     printf("           Receipt\n");
     printf("==============================\n");
-    for (int i = 0; i < orderCount; i++) {
+    int i;
+    for (i = 0; i < orderCount; i++) {
         printf("%d. %s - %d x %.2f PHP (Sugar: %s, Espresso Shot: %s)\n", i + 1, orders[i].itemName, orders[i].quantity, orders[i].price, orders[i].sugarLevel, orders[i].espressoShot ? "Yes" : "No");
         total += orders[i].price;
     }
     printf("------------------------------\n");
     printf("Total: %.2f PHP\n", total);
-
     if (account.points > 1) {
-        char usePoints;
-        printf("You have %.2f points. Would you like to use them to get a discount? (y/n): ", account.points);
-        scanf(" %c", &usePoints);
-        if (usePoints == 'y' || usePoints == 'Y') {
-            float discount = account.points / POINTS_CONVERSION_RATE;
-            if (discount > total) {
-                discount = total;
+        if (isAccountValid(account.creationDate)) {
+            char usePoints;
+            printf("You have %.2f points. Would you like to use them to get a discount? (y/n): ", account.points);
+            clearInputBuffer();
+            scanf("%c", &usePoints);
+            if (usePoints == 'y' || usePoints == 'Y') {
+                float discount = account.points;
+                if (discount > total) {
+                    discount = total;
+                }
+                total -= discount;
+                account.points -= discount;
+                printf("Discount applied: %.2f PHP\n", discount);
+                printf("New Total: %.2f PHP\n", total);
             }
-            total -= discount;
-            account.points -= discount * POINTS_CONVERSION_RATE;
-            printf("Discount applied: %.2f PHP\n", discount);
-            printf("New Total: %.2f PHP\n", total);
+        } else {
+            printf("Your account is no longer valid for points usage.\n");
         }
     }
     printf("==============================\n");
 }
 
 void addPoints(float amount) {
-    account.points += amount * POINTS_CONVERSION_RATE;
+    account.points += (int)(amount / 50);
 }
 
 void viewPointsBalance() {
@@ -127,15 +218,32 @@ void viewPointsBalance() {
 
 void createAccount(char *username) {
     char password[50];
+    int year, month, day;
+
     printf("\n==============================\n");
     printf("     Create an Account\n");
     printf("==============================\n");
     printf("Enter username: ");
+    while ((getchar()) != '\n');
     scanf("%s", username);
     printf("Enter password: ");
+    while ((getchar()) != '\n');
     scanf("%s", password);
+    printf("Enter account creation date (YYYY/MM/DD): ");
+    while ((getchar()) != '\n');
+    scanf("%d %d %d", &year, &month, &day);
+
     strcpy(account.username, username);
     account.points = 0.0;
+
+    account.creationDate.tm_year = year - 1900; 
+    account.creationDate.tm_mon = month - 1;
+    account.creationDate.tm_mday = day;
+    account.creationDate.tm_hour = 0;
+    account.creationDate.tm_min = 0;
+    account.creationDate.tm_sec = 0;
+    account.creationDate.tm_isdst = -1;        
+
     printf("Account created successfully!\n");
     printf("==============================\n");
 }
@@ -145,10 +253,11 @@ int login(char *username, int *accountCreated) {
     printf("\n==============================\n");
     printf("           Login\n");
     printf("==============================\n");
-    printf("1. Create an Account\n");
+    printf("1. Create Account\n");
     printf("2. Continue as Guest\n");
     printf("3. Exit\n");
     printf("Enter your choice: ");
+    clearInputBuffer();
     scanf("%d", &choice);
 
     if (choice == 1) {
@@ -166,6 +275,7 @@ int login(char *username, int *accountCreated) {
 int main() {
     int choice;
     int itemChoice;
+    int subChoice;
     int quantity;
     char sugarLevel[20];
     int espressoShot;
@@ -193,19 +303,24 @@ int main() {
         }
         printf("6. Logout\n");
         printf("Enter your choice: ");
+        while ((getchar()) != '\n');
         scanf("%d", &choice);
 
         switch (choice) {
             case 1:
                 displayCoffeeMenu();
                 printf("Please select an item by entering the corresponding number: ");
+                while ((getchar()) != '\n');
                 scanf("%d", &itemChoice);
                 if (itemChoice == 10) break;
                 printf("Enter quantity: ");
+                while ((getchar()) != '\n');
                 scanf("%d", &quantity);
                 printf("Enter sugar level (None, Low, Medium, High): ");
+                while ((getchar()) != '\n');
                 scanf("%s", sugarLevel);
                 printf("Add an espresso shot? (1 for Yes, 0 for No): ");
+                while ((getchar()) != '\n');
                 scanf("%d", &espressoShot);
                 switch (itemChoice) {
                     case 1:
@@ -261,6 +376,7 @@ int main() {
             case 2:
                 displayTeaMenu();
                 printf("Please select an item by entering the corresponding number: ");
+                while ((getchar()) != '\n');
                 scanf("%d", &itemChoice);
                 if (itemChoice == 9) break;
                 switch (itemChoice) {
@@ -312,38 +428,39 @@ int main() {
             case 3:
                 displayBakeryMenu();
                 printf("Please select an item by entering the corresponding number: ");
+                while ((getchar()) != '\n');
                 scanf("%d", &itemChoice);
                 if (itemChoice == 6) break;
-                switch (itemChoice) {
-                    case 1:
-                        printf("You selected Croissant (Plain, Almond, Chocolate).\n");
-                        addOrder("Croissant (Plain, Almond, Chocolate)", 168.00, 1, "None", 0);
-                        addPoints(168.00);
-                        break;
-                    case 2:
-                        printf("You selected Muffins (Blueberry, Banana Nut, Chocolate Chip).\n");
-                        addOrder("Muffins (Blueberry, Banana Nut, Chocolate Chip)", 154.00, 1, "None", 0);
-                        addPoints(154.00);
-                        break;
-                    case 3:
-                        printf("You selected Scones (Raisin, Cranberry).\n");
-                        addOrder("Scones (Raisin, Cranberry)", 140.00, 1, "None", 0);
-                        addPoints(140.00);
-                        break;
-                    case 4:
-                        printf("You selected Cinnamon Rolls.\n");
-                        addOrder("Cinnamon Rolls", 182.00, 1, "None", 0);
-                        addPoints(182.00);
-                        break;
-                    case 5:
-                        printf("You selected Danish Pastries.\n");
-                        addOrder("Danish Pastries", 196.00, 1, "None", 0);
-                        addPoints(196.00);
-                        break;
-                    default:
-                        printf("Invalid selection. Please try again.\n");
-                        break;
+                if (itemChoice == 1) {
+                    printf("Please select the type of Croissant:\n");
+                    printf("1. Plain\n");
+                    printf("2. Almond\n");
+                    printf("3. Chocolate\n");
+                    printf("Enter your choice: ");
+                    while ((getchar()) != '\n');
+                    scanf("%d", &subChoice);
+                } else if (itemChoice == 2) {
+                    printf("Please select the type of Muffin:\n");
+                    printf("1. Blueberry\n");
+                    printf("2. Banana Nut\n");
+                    printf("3. Chocolate Chip\n");
+                    printf("Enter your choice: ");
+                    while ((getchar()) != '\n');
+                    scanf("%d", &subChoice);
+                } else if (itemChoice == 3) {
+                    printf("Please select the type of Scone:\n");
+                    printf("1. Raisin\n");
+                    printf("2. Cranberry\n");
+                    printf("Enter your choice: ");
+                    while ((getchar()) != '\n');
+                    scanf("%d", &subChoice);
+                } else {
+                    subChoice = 1;
                 }
+                printf("Enter quantity: ");
+                while ((getchar()) != '\n');
+                scanf("%d", &quantity);
+                addBakeryOrder(itemChoice, subChoice, quantity);
                 break;
             case 4:
                 if (itemAdded) {
@@ -375,3 +492,4 @@ int main() {
 
     return 0;
 }
+
